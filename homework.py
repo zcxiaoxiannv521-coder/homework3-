@@ -195,3 +195,21 @@ fifteen_end = (max_15_time + pd.Timedelta(minutes=15)).strftime("%H:%M")
 print(f"高峰小时：{peak_start} ~ {peak_end}，刷卡量：{peak_count} 次")
 print(f"最大5分钟刷卡量（{five_start}~{five_end}）：{max_5_count} 次 PHF5 = {peak_count} / (12 × {max_5_count}) = {PHF5:.4f}")
 print(f"最大15分钟刷卡量（{fifteen_start}~{fifteen_end}）：{max_15_count} 次 PHF15 = {peak_count} / (4 × {max_15_count}) = {PHF15:.4f}")
+
+print("\n[任务5]已生成20个文件，路径如下：")
+import os
+
+os.makedirs("线路驾驶员信息", exist_ok=True)
+
+routes = df[(df['线路号']>=1101)&(df['线路号']<=1120)]
+
+for r in routes['线路号'].unique():
+    temp = routes[routes['线路号']==r]
+    pairs = temp[['车辆编号','驾驶员编号']].drop_duplicates()
+
+    with open(f"线路驾驶员信息/{r}.txt", "w", encoding='utf-8') as f:
+        f.write(f"线路号: {r}\n")
+        for _, row in pairs.iterrows():
+            f.write(f"{row['车辆编号']} {row['驾驶员编号']}\n")
+
+    print(f"线路驾驶员信息\{r}.txt")
