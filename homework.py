@@ -150,3 +150,48 @@ for idx, row in top15_sorted.iterrows():
     print(idx, row['线路号'], row['mean_stops'], row['std_stops'])
 plt.show()
 print("\n[任务3]已保存图像：route_stops.png\n")
+
+print("[任务4】高峰小时系数PHF计算结果：")
+# 任务4：高峰小时系数 PHF
+
+# 只统计刷卡类型=0
+df0 = df[df['刷卡类型'] == 0].copy()
+
+# 统计每小时刷卡量，找出刷卡量最大的小时
+hour_counts = df0.groupby('hour').size()
+peak_hour = hour_counts.idxmax()
+peak_count = hour_counts.max()
+
+# 筛选高峰小时内的数据
+peak_df = df0[df0['hour'] == peak_hour].copy()
+
+# 5分钟粒度统计
+peak_df['time_5min'] = peak_df['交易时间'].dt.floor('5min')
+five_counts = peak_df.groupby('time_5min').size()
+max_5_time = five_counts.idxmax()
+max_5_count = five_counts.max()
+
+# 15分钟粒度统计
+peak_df['time_15min'] = peak_df['交易时间'].dt.floor('15min')
+fifteen_counts = peak_df.groupby('time_15min').size()
+max_15_time = fifteen_counts.idxmax()
+max_15_count = fifteen_counts.max()
+
+# 计算 PHF
+PHF5 = peak_count / (12 * max_5_count)
+PHF15 = peak_count / (4 * max_15_count)
+
+# 时间格式
+peak_start = f"{peak_hour:02d}:00"
+peak_end = f"{peak_hour + 1:02d}:00"
+
+five_start = max_5_time.strftime("%H:%M")
+five_end = (max_5_time + pd.Timedelta(minutes=5)).strftime("%H:%M")
+
+fifteen_start = max_15_time.strftime("%H:%M")
+fifteen_end = (max_15_time + pd.Timedelta(minutes=15)).strftime("%H:%M")
+
+# 按老师要求格式输出
+print(f"高峰小时：{peak_start} ~ {peak_end}，刷卡量：{peak_count} 次")
+print(f"最大5分钟刷卡量（{five_start}~{five_end}）：{max_5_count} 次 PHF5 = {peak_count} / (12 × {max_5_count}) = {PHF5:.4f}")
+print(f"最大15分钟刷卡量（{fifteen_start}~{fifteen_end}）：{max_15_count} 次 PHF15 = {peak_count} / (4 × {max_15_count}) = {PHF15:.4f}")
