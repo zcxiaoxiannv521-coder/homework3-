@@ -89,3 +89,64 @@ plt.savefig("hour_distribution.png", dpi=150)
 print("[任务2(b)]已保存图像：hour_distribution.png")
 # 弹出窗口展示图表
 plt.show()
+
+#与下一任务分隔
+print()
+
+print("[任务3]每条线路的平均搭乘站点数及标准差(前10行)：")
+def analyze_route_stops(df, route_col='线路号', stops_col='ride_stops'):
+    """
+    计算各线路乘客的平均搭乘站点数及其标准差
+    """
+    result = df.groupby(route_col)[stops_col].agg(['mean','std']).reset_index()
+    result.columns = [route_col, 'mean_stops', 'std_stops']
+    result = result.sort_values('mean_stops', ascending=False)
+    return result
+import seaborn as sns
+
+res = analyze_route_stops(df)
+top15 = res.head(15).copy()
+top15_sort1= top15.sort_values('mean_stops', ascending=False)
+top15_sort2= top15_sort1.reset_index(drop=True)
+print(top15_sort2.head(10))
+top15_sorted = top15.sort_values("线路号", ascending=True).reset_index(drop=True)
+plt.figure(figsize=(12, 7))
+colors = sns.color_palette(
+    "Blues_d",
+    n_colors=len(top15_sorted)
+)
+
+# 横向柱状图
+ax=sns.barplot(
+    data=top15_sorted,
+    x='mean_stops',
+    y='线路号',
+    hue='线路号',
+    palette=colors,
+    orient='h',
+    legend=False
+)
+y_pos = np.arange(len(top15_sorted))
+# 误差线（重点修复）
+plt.errorbar(
+    x=top15_sorted['mean_stops'],
+    y=y_pos,
+    xerr=top15_sorted['std_stops'],
+    fmt='none',
+    ecolor='black',
+    capsize=0.3,
+    linewidth=1
+)
+plt.title("Top 15 Routes:Mean Ride Stops(with Std Dev)")
+plt.xlabel("Mean Ride Stops")
+plt.ylabel("Route ID")
+plt.grid(axis='x', linestyle='-', alpha=0.3)
+plt.xlim(left=0)
+plt.xticks(range(0,25,5))
+plt.tight_layout()
+plt.savefig("route_stops.png", dpi=150, bbox_inches='tight')
+print("y坐标 | 线路号 | 均值mean_stops | 标准差std_stops")
+for idx, row in top15_sorted.iterrows():
+    print(idx, row['线路号'], row['mean_stops'], row['std_stops'])
+plt.show()
+print("\n[任务3]已保存图像：route_stops.png\n")
